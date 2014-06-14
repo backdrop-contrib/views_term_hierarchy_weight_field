@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * Implements hook_views_api().
+ */
+function views_term_hierarchy_weight_field_views_api() {
+  return array('api' => 3);
+}
+
+/**
+ * Implements hook_formid_alter().
+ */
+function views_term_hierarchy_weight_field_form_taxonomy_overview_terms_alter(&$form, $form_state) {
+  $form['#submit'][] = 'views_term_hierarchy_weight_field_submit';
+}
+
+/**
+ * Custom submit handler that saves the hierarchical weight.
+ */
+function views_term_hierarchy_weight_field_submit($form, &$form_state) {
+  foreach (array_values($form_state['input']) as $hweight => $term) {
+    if (is_array($term)) {
+      $term = (object) $term;
+      db_update('taxonomy_term_data')
+        ->fields(array('hweight' => $hweight))
+        ->condition('tid', $term->tid, '=')
+        ->execute();
+    }
+  }
+}

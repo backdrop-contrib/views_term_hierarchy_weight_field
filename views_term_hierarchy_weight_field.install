@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * Implements hook_schema_alter().
+ */
+function views_term_hierarchy_weight_field_schema_alter(&$schema) {
+  $schema['taxonomy_term_data']['fields']['hweight'] = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The weight of this term in the hierarchical tree. Added by the Views Term Hierarchy Weight Field',
+  );
+}
+
+/**
+ * Implements hook_install().
+ */
+function views_term_hierarchy_weight_field_install() {
+  $schema = drupal_get_schema('taxonomy_term_data');
+  db_add_field('taxonomy_term_data', 'hweight', $schema['fields']['hweight']);
+
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach ($vocabularies as $vid => $vocabulary) {
+    $tree = taxonomy_get_tree($vid);
+    foreach ($tree as $hweight => $term) {
+      $term = (object) $term;
+      db_update('taxonomy_term_data')
+        ->fields(array('hweight' => $hweight))
+        ->condition('tid', $term->tid, '=')
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function views_term_hierarchy_weight_field_uninstall() {
+  db_drop_field('taxonomy_term_data', 'hweight');
+}
