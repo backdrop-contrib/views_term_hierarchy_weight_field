@@ -20,11 +20,35 @@ function views_term_hierarchy_weight_field_form_taxonomy_overview_terms_alter(&$
 function views_term_hierarchy_weight_field_submit($form, &$form_state) {
   foreach (array_values($form_state['input']) as $hweight => $term) {
     if (is_array($term)) {
-      $term = (object) $term;
-      db_update('taxonomy_term_data')
-        ->fields(array('hweight' => $hweight))
-        ->condition('tid', $term->tid, '=')
-        ->execute();
+      views_term_hierarchy_weight_field_update_hweight($term['tid'], $hweight);
     }
   }
+}
+
+/**
+ * Implements hook_taxonomy_term_insert().
+ */
+function views_term_hierarchy_weight_field_taxonomy_term_insert($term) {
+  foreach (taxonomy_get_tree($term->vid) as $hweight => $term) {
+    views_term_hierarchy_weight_field_update_hweight($term->tid, $hweight);
+  }
+}
+
+/**
+ * API function, set the hierarchical weight of a term.
+ *
+ * @param int $tid
+ *   The Term ID
+ * @param int $hweight
+ *   The weight
+ */
+function views_term_hierarchy_weight_field_update_hweight($tid, $hweight) {
+  if (!is_numeric($tid) || !is_numeric($hweight)) {
+    return;
+  }
+
+  db_update('taxonomy_term_data')
+    ->fields(array('hweight' => $hweight))
+    ->condition('tid', $tid, '=')
+    ->execute();
 }
