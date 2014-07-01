@@ -20,7 +20,9 @@ function views_term_hierarchy_weight_field_form_taxonomy_overview_terms_alter(&$
 function views_term_hierarchy_weight_field_submit($form, &$form_state) {
   foreach (array_values($form_state['input']) as $hweight => $term) {
     if (is_array($term)) {
+      $hdepth = count(taxonomy_get_parents_all($term['tid'])) - 1;
       views_term_hierarchy_weight_field_update_hweight($term['tid'], $hweight);
+      views_term_hierarchy_weight_field_update_hdepth($term['tid'], $hdepth);
     }
   }
 }
@@ -30,7 +32,9 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
  */
 function views_term_hierarchy_weight_field_taxonomy_term_insert($term) {
   foreach (taxonomy_get_tree($term->vid) as $hweight => $term) {
+    $hdepth = count(taxonomy_get_parents_all($term->tid)) - 1;
     views_term_hierarchy_weight_field_update_hweight($term->tid, $hweight);
+    views_term_hierarchy_weight_field_update_hdepth($term->tid, $hdepth);
   }
 }
 
@@ -49,6 +53,25 @@ function views_term_hierarchy_weight_field_update_hweight($tid, $hweight) {
 
   db_update('taxonomy_term_data')
     ->fields(array('hweight' => $hweight))
+    ->condition('tid', $tid, '=')
+    ->execute();
+}
+
+/**
+ * API function, set the hierarchical depth of a term.
+ *
+ * @param int $tid
+ *   The Term ID
+ * @param int $hdepth
+ *   The term depth
+ */
+function views_term_hierarchy_weight_field_update_hdepth($tid, $hdepth) {
+  if (!is_numeric($tid) || !is_int($hdepth)) {
+    return;
+  }
+
+  db_update('taxonomy_term_data')
+    ->fields(array('hdepth' => $hdepth))
     ->condition('tid', $tid, '=')
     ->execute();
 }
