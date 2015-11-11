@@ -27,7 +27,6 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
     }
   }
 
-  //put all that information into our batch array
   $batch = array(
     'operations' => $operations,
     'title' => t('Computing the weight and depth of each term...'),
@@ -35,7 +34,6 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
     'error_message' => t('An error occurred'),
   );
 
-  //Get the batch process all ready!
   batch_set($batch);
 }
 
