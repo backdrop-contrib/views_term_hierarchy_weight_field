@@ -18,24 +18,46 @@ function views_term_hierarchy_weight_field_form_taxonomy_overview_terms_alter(&$
  * Custom submit handler that saves the hierarchical weight.
  */
 function views_term_hierarchy_weight_field_submit($form, &$form_state) {
+  $operations = array();
   foreach (array_values($form_state['input']) as $hweight => $term) {
     if (is_array($term)) {
       $hdepth = count(taxonomy_get_parents_all($term['tid'])) - 1;
-      views_term_hierarchy_weight_field_update_hweight($term['tid'], $hweight);
-      views_term_hierarchy_weight_field_update_hdepth($term['tid'], $hdepth);
+      $operations[] = array('views_term_hierarchy_weight_field_update_hweight', array($term['tid'], $hweight));
+      $operations[] = array('views_term_hierarchy_weight_field_update_hdepth', array($term['tid'], $hdepth));
     }
   }
+
+  //put all that information into our batch array
+  $batch = array(
+    'operations' => $operations,
+    'title' => t('Computing the weight and depth of each term...'),
+    'init_message' => t('Initializing'),
+    'error_message' => t('An error occurred'),
+  );
+
+  //Get the batch process all ready!
+  batch_set($batch);
 }
 
 /**
  * Implements hook_taxonomy_term_insert().
  */
 function views_term_hierarchy_weight_field_taxonomy_term_insert($term) {
+  $operations = array();
   foreach (taxonomy_get_tree($term->vid) as $hweight => $term) {
     $hdepth = count(taxonomy_get_parents_all($term->tid)) - 1;
-    views_term_hierarchy_weight_field_update_hweight($term->tid, $hweight);
-    views_term_hierarchy_weight_field_update_hdepth($term->tid, $hdepth);
+    $operations[] = array('views_term_hierarchy_weight_field_update_hweight', array($term->tid, $hweight));
+    $operations[] = array('views_term_hierarchy_weight_field_update_hdepth', array($term->tid, $hdepth));
   }
+
+  $batch = array(
+    'operations' => $operations,
+    'title' => t('Computing the weight and depth of each term...'),
+    'init_message' => t('Initializing'),
+    'error_message' => t('An error occurred'),
+  );
+
+  batch_set($batch);
 }
 
 /**
