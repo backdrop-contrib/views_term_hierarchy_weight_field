@@ -95,3 +95,40 @@ function views_term_hierarchy_weight_field_update_hdepth($tid, $hdepth) {
     ->condition('tid', $tid, '=')
     ->execute();
 }
+
+/**
+ * Implements hook_menu_link_insert().
+ */
+function views_term_hierarchy_weight_field_menu_link_insert($menu_link) {
+  views_term_hierarchy_weight_field_menu_link_update($menu_link);
+}
+
+/**
+ * Implements hook_menu_link_update().
+ */
+function views_term_hierarchy_weight_field_menu_link_update($menu_link) {
+  $menu_tree = menu_tree_all_data($menu_link['menu_name']);
+  $menu_flatten = array();
+  _views_term_hierarchy_weight_field_flatten_menu($menu_tree, $menu_flatten);
+
+  foreach(array_values($menu_flatten) as $index => $menu_link) {
+    db_update('menu_links')
+      ->fields(array('hweight' => $index))
+      ->condition('mlid', $menu_link['mlid'], '=')
+      ->execute();
+  }
+}
+
+/**
+ * Helper function. Flatten a menu tree into a single flat array keyed by mlid.
+ */
+function _views_term_hierarchy_weight_field_flatten_menu($tree, &$flat) {
+  foreach ($tree as $data) {
+    if (!$data['link']['hidden']) {
+      $flat[$data['link']['mlid']] = $data['link'];
+      if ($data['below']) {
+        _book_flatten_menu($data['below'], $flat);
+      }
+    }
+  }
+}
