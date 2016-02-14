@@ -120,6 +120,19 @@ function views_term_hierarchy_weight_field_menu_link_update($menu_link) {
 }
 
 /**
+ * Implements hook_modules_installed().
+ */
+function views_term_hierarchy_weight_field_modules_installed($modules) {
+  if (in_array('entity_menu_links', $modules)) {
+    $field = 'hweight';
+    $schema = drupal_get_schema('menu_links');
+    if (!db_field_exists('menu_links_revision', $field)) {
+      db_add_field('menu_links_revision', $field, $schema['fields'][$field]);
+    }
+  }
+}
+
+/**
  * Helper function. Flatten a menu tree into a single flat array keyed by mlid.
  */
 function _views_term_hierarchy_weight_field_flatten_menu($tree, &$flat) {

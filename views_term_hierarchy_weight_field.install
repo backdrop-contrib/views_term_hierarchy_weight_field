@@ -22,12 +22,14 @@ function views_term_hierarchy_weight_field_schema_alter(&$schema) {
     'default' => 0,
     'description' => 'The weight of this menu link in the hierarchical tree. Added by the Views Term Hierarchy Weight Field module.',
   );
-  $schema['menu_links_revision']['fields']['hweight'] = array(
-    'type' => 'int',
-    'not null' => TRUE,
-    'default' => 0,
-    'description' => 'The weight of this menu link in the hierarchical tree. Added by the Views Term Hierarchy Weight Field module.',
-  );
+  if (module_exists('entity_menu_links')) {
+    $schema['menu_links_revision']['fields']['hweight'] = array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'The weight of this menu link in the hierarchical tree. Added by the Views Term Hierarchy Weight Field module.',
+    );
+  }
 }
 
 /**
@@ -46,8 +48,10 @@ function views_term_hierarchy_weight_field_install() {
   if (!db_field_exists('menu_links', $field)) {
     db_add_field('menu_links', $field, $schema['fields'][$field]);
   }
-  if (!db_field_exists('menu_links_revision', $field)) {
-    db_add_field('menu_links_revision', $field, $schema['fields'][$field]);
+  if (module_exists('entity_menu_links')) {
+    if (!db_field_exists('menu_links_revision', $field)) {
+      db_add_field('menu_links_revision', $field, $schema['fields'][$field]);
+    }
   }
 
   $vocabularies = taxonomy_get_vocabularies();
@@ -68,14 +72,16 @@ function views_term_hierarchy_weight_field_uninstall() {
     db_drop_field('taxonomy_term_data', $field);
   }
   db_drop_field('menu_links', 'hweight');
-  db_drop_field('menu_links_revision', 'hweight');
+  if (module_exists('entity_menu_links')) {
+    db_drop_field('menu_links_revision', 'hweight');
+  }
 }
 
 /**
  * Implements hook_update_N().
  * Create missing table fields.
  */
-function views_term_hierarchy_weight_field_update_7002() {
+function views_term_hierarchy_weight_field_update_7003() {
   views_term_hierarchy_weight_field_install();
   return array();
 }
