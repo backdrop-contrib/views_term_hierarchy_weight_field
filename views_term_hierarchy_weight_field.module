@@ -127,7 +127,7 @@ function _views_term_hierarchy_weight_field_flatten_menu($tree, &$flat) {
     if (!$data['link']['hidden']) {
       $flat[$data['link']['mlid']] = $data['link'];
       if ($data['below']) {
-        _book_flatten_menu($data['below'], $flat);
+        _views_term_hierarchy_weight_field_flatten_menu($data['below'], $flat);
       }
     }
   }
