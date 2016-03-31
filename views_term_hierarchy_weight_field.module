@@ -19,10 +19,13 @@ function views_term_hierarchy_weight_field_form_taxonomy_overview_terms_alter(&$
  */
 function views_term_hierarchy_weight_field_submit($form, &$form_state) {
   $operations = array();
+  $page = isset($_GET['page']) ? $_GET['page'] : 0;
+  $offset = $form['#page_increment'];
+  $currentoffset = $offset * $page;
   foreach (array_values($form_state['input']) as $hweight => $term) {
     if (is_array($term)) {
       $hdepth = count(taxonomy_get_parents_all($term['tid'])) - 1;
-      $operations[] = array('views_term_hierarchy_weight_field_update_hweight', array($term['tid'], $hweight));
+      $operations[] = array('views_term_hierarchy_weight_field_update_hweight', array($term['tid'], $hweight + $currentoffset));
       $operations[] = array('views_term_hierarchy_weight_field_update_hdepth', array($term['tid'], $hdepth));
     }
   }
