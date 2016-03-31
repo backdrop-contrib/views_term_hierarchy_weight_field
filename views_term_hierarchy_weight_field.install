@@ -36,21 +36,22 @@ function views_term_hierarchy_weight_field_schema_alter(&$schema) {
  * Implements hook_install().
  */
 function views_term_hierarchy_weight_field_install() {
-  $schema = drupal_get_schema('taxonomy_term_data');
+  $schema = array();
+  views_term_hierarchy_weight_field_schema_alter($schema);
+
   foreach(array('hweight', 'hdepth') as $field) {
     if (!db_field_exists('taxonomy_term_data', $field)) {
-      db_add_field('taxonomy_term_data', $field, $schema['fields'][$field]);
+      db_add_field('taxonomy_term_data', $field, $schema['taxonomy_term_data']['fields'][$field]);
     }
   }
 
   $field = 'hweight';
-  $schema = drupal_get_schema('menu_links');
   if (!db_field_exists('menu_links', $field)) {
-    db_add_field('menu_links', $field, $schema['fields'][$field]);
+    db_add_field('menu_links', $field, $schema['menu_links']['fields'][$field]);
   }
   if (module_exists('entity_menu_links')) {
     if (!db_field_exists('menu_links_revision', $field)) {
-      db_add_field('menu_links_revision', $field, $schema['fields'][$field]);
+      db_add_field('menu_links_revision', $field, $schema['menu_links_revision']['fields'][$field]);
     }
   }
 
@@ -81,7 +82,7 @@ function views_term_hierarchy_weight_field_uninstall() {
  * Implements hook_update_N().
  * Create missing table fields.
  */
-function views_term_hierarchy_weight_field_update_7003() {
+function views_term_hierarchy_weight_field_update_7005() {
   views_term_hierarchy_weight_field_install();
   return array();
 }
