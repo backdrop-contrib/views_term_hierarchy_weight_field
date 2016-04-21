@@ -25,8 +25,7 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
   foreach (array_values($form_state['input']) as $hweight => $term) {
     if (is_array($term)) {
       $hdepth = count(taxonomy_get_parents_all($term['tid'])) - 1;
-      $operations[] = array('views_term_hierarchy_weight_field_update_hweight', array($term['tid'], $hweight + $currentoffset));
-      $operations[] = array('views_term_hierarchy_weight_field_update_hdepth', array($term['tid'], $hdepth));
+      $operations[] = array('views_term_hierarchy_weight_field_update', array($term['tid'], $hweight + $currentoffset, $hdepth));
     }
   }
 
@@ -44,81 +43,27 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
  * Implements hook_taxonomy_term_insert().
  */
 function views_term_hierarchy_weight_field_taxonomy_term_insert($term) {
-  $operations = array();
   foreach (taxonomy_get_tree($term->vid) as $hweight => $term) {
     $hdepth = count(taxonomy_get_parents_all($term->tid)) - 1;
-    $operations[] = array('views_term_hierarchy_weight_field_update_hweight', array($term->tid, $hweight));
-    $operations[] = array('views_term_hierarchy_weight_field_update_hdepth', array($term->tid, $hdepth));
+    views_term_hierarchy_weight_field_update($term->tid, $hweight, $hdepth);
   }
-
-  $batch = array(
-    'operations' => $operations,
-    'title' => t('Computing the weight and depth of each term...'),
-    'init_message' => t('Initializing'),
-    'error_message' => t('An error occurred'),
-  );
-
-  batch_set($batch);
 }
 
 /**
- * API function, set the hierarchical weight of a term.
- *
- * @param int $tid
- *   The Term ID
- * @param int $hweight
- *   The weight
+ * Implements hook_cron().
  */
-function views_term_hierarchy_weight_field_update_hweight($tid, $hweight) {
-  if (!is_numeric($tid) || !is_numeric($hweight)) {
-    return;
-  }
+function views_term_hierarchy_weight_field_cron() {
+  foreach(menu_get_menus() as $menu) {
+    $menu_tree = menu_tree_all_data($menu);
+    $menu_flatten = array();
+    _views_term_hierarchy_weight_field_flatten_menu($menu_tree, $menu_flatten);
 
-  db_update('taxonomy_term_data')
-    ->fields(array('hweight' => $hweight))
-    ->condition('tid', $tid, '=')
-    ->execute();
-}
-
-/**
- * API function, set the hierarchical depth of a term.
- *
- * @param int $tid
- *   The Term ID
- * @param int $hdepth
- *   The term depth
- */
-function views_term_hierarchy_weight_field_update_hdepth($tid, $hdepth) {
-  if (!is_numeric($tid) || !is_int($hdepth)) {
-    return;
-  }
-
-  db_update('taxonomy_term_data')
-    ->fields(array('hdepth' => $hdepth))
-    ->condition('tid', $tid, '=')
-    ->execute();
-}
-
-/**
- * Implements hook_menu_link_insert().
- */
-function views_term_hierarchy_weight_field_menu_link_insert($menu_link) {
-  views_term_hierarchy_weight_field_menu_link_update($menu_link);
-}
-
-/**
- * Implements hook_menu_link_update().
- */
-function views_term_hierarchy_weight_field_menu_link_update($menu_link) {
-  $menu_tree = menu_tree_all_data($menu_link['menu_name']);
-  $menu_flatten = array();
-  _views_term_hierarchy_weight_field_flatten_menu($menu_tree, $menu_flatten);
-
-  foreach(array_values($menu_flatten) as $index => $menu_link) {
-    db_update('menu_links')
-      ->fields(array('hweight' => $index))
-      ->condition('mlid', $menu_link['mlid'], '=')
-      ->execute();
+    foreach(array_values($menu_flatten) as $index => $menu_link) {
+      db_update('menu_links')
+        ->fields(array('hweight' => $index))
+        ->condition('mlid', $menu_link['mlid'], '=')
+        ->execute();
+    }
   }
 }
 
@@ -147,4 +92,25 @@ function _views_term_hierarchy_weight_field_flatten_menu($tree, &$flat) {
       }
     }
   }
+}
+
+/**
+ * API function, set the hierarchical weight of a term.
+ *
+ * @param int $tid
+ *   The Term ID
+ * @param int $hweight
+ *   The term weight
+ * @param int $hdepth
+ *   The term depth
+ */
+function views_term_hierarchy_weight_field_update($tid, $hweight, $hdepth) {
+  if (!is_numeric($tid) || !is_numeric($hweight) || !is_int($hdepth)) {
+    return;
+  }
+
+  db_update('taxonomy_term_data')
+    ->fields(array('hweight' => $hweight, 'hdepth' => $hdepth))
+    ->condition('tid', $tid, '=')
+    ->execute();
 }
