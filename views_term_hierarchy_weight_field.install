@@ -59,8 +59,7 @@ function views_term_hierarchy_weight_field_install() {
   foreach ($vocabularies as $vid => $vocabulary) {
     foreach (taxonomy_get_tree($vid) as $hweight => $term) {
       $hdepth = count(taxonomy_get_parents_all($term->tid)) - 1;
-      views_term_hierarchy_weight_field_update_hweight($term->tid, $hweight);
-      views_term_hierarchy_weight_field_update_hdepth($term->tid, $hdepth);
+      views_term_hierarchy_weight_field_update($term->tid, $hweight, $hdepth);
     }
   }
 }
