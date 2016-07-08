@@ -4,7 +4,10 @@
  * Implements hook_views_api().
  */
 function views_term_hierarchy_weight_field_views_api() {
-  return array('api' => 3);
+  return array(
+    'api' => 3,
+    'path' => backdrop_get_path('module', 'views_term_hierarchy_weight_field') . '/views',
+  );
 }
 
 /**
@@ -23,7 +26,7 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
   $currentoffset = $offset * $page;
   foreach (array_values($form_state['input']) as $hweight => $term) {
     if (is_array($term)) {
-      $hdepth = count(taxonomy_get_parents_all($term['tid'])) - 1;
+      $hdepth = count(taxonomy_load_parents_all($term->tid)) - 1;
       views_term_hierarchy_weight_field_update($term['tid'], $hweight + $currentoffset, $hdepth);
     }
   }
@@ -34,7 +37,7 @@ function views_term_hierarchy_weight_field_submit($form, &$form_state) {
  */
 function views_term_hierarchy_weight_field_taxonomy_term_insert($term) {
   foreach (taxonomy_get_tree($term->vid) as $hweight => $term) {
-    $hdepth = count(taxonomy_get_parents_all($term->tid)) - 1;
+    $hdepth = count(taxonomy_load_parents_all($term->tid)) - 1;
     views_term_hierarchy_weight_field_update($term->tid, $hweight, $hdepth);
   }
 }
@@ -63,7 +66,7 @@ function views_term_hierarchy_weight_field_cron() {
 function views_term_hierarchy_weight_field_modules_installed($modules) {
   if (in_array('entity_menu_links', $modules)) {
     $field = 'hweight';
-    $schema = drupal_get_schema('menu_links');
+    $schema = backdrop_get_schema('menu_links');
     if (!db_field_exists('menu_links_revision', $field)) {
       db_add_field('menu_links_revision', $field, $schema['fields'][$field]);
     }

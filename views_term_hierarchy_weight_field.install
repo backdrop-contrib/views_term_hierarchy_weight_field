@@ -58,7 +58,7 @@ function views_term_hierarchy_weight_field_install() {
   $vocabularies = taxonomy_get_vocabularies();
   foreach ($vocabularies as $vid => $vocabulary) {
     foreach (taxonomy_get_tree($vid) as $hweight => $term) {
-      $hdepth = count(taxonomy_get_parents_all($term->tid)) - 1;
+      $hdepth = count(taxonomy_load_parents_all($term->tid)) - 1;
       views_term_hierarchy_weight_field_update($term->tid, $hweight, $hdepth);
     }
   }
@@ -75,13 +75,4 @@ function views_term_hierarchy_weight_field_uninstall() {
   if (module_exists('entity_menu_links')) {
     db_drop_field('menu_links_revision', 'hweight');
   }
-}
-
-/**
- * Implements hook_update_N().
- * Create missing table fields.
- */
-function views_term_hierarchy_weight_field_update_7005() {
-  views_term_hierarchy_weight_field_install();
-  return array();
 }
