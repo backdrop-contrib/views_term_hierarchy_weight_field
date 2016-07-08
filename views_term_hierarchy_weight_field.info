@@ -3,3 +3,4 @@ description = Provides a new field for Views to sort terms in hierarchical order
 backdrop = 1.x
 package = Views
 dependencies[] = views
+type = module
